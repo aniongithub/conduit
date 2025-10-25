@@ -1,0 +1,44 @@
+---
+# Pokemon Image Downloader Pipeline
+# Usage: conduit-cli pokemon_api.yaml --args limit=20 outputFolder=./my_pokemon
+# Or: limit=20 outputFolder=./my_pokemon conduit-cli pokemon_api.yaml
+# Defaults: limit=10, outputFolder=./pokemon_images
+
+# Step 1: Create RestApiInput for Pokemon list API
+- id: conduit.Input
+  data:
+    - url: "https://pokeapi.co/api/v2/pokemon?limit=${limit:-10}"
+      method: "GET"
+
+# Step 2: Fetch Pokemon list from API with the specified limit
+- id: conduit.RestApi
+  response_format: "json"
+
+# Step 3: Extract each Pokemon URL from the results
+- id: conduit.JsonQuery
+  query: ".results[]"
+
+# Step 4: Fork to preserve original Pokemon data and fetch detailed data
+- id: conduit.Fork
+  paths:
+    url:  # Large artwork URL for downloading
+      - id: conduit.RestApi
+        response_format: "json"
+      - id: conduit.JsonQuery
+        query: ".sprites.other.official-artwork.front_default"
+    filename:  # Pokemon name with .png extension
+      - id: conduit.JsonQuery
+        query: ".name"
+      - id: conduit.Format
+        template: "{{input}}.png"
+
+# Step 5: Download the Pokemon image with proper filename
+# Fork now outputs {"url": sprite_url, "filename": pokemon_name}
+- id: conduit.DownloadFile
+  output_dir: "${outputFolder:-./pokemon_images}"
+  create_dirs: true
+  overwrite: true
+
+# Step 6: Display the downloaded file path
+- id: conduit.Console
+  format: "Downloaded Pokemon image: {{input}}"

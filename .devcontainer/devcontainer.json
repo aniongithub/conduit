@@ -1,0 +1,19 @@
+{
+	"name": "devcontainer",
+	"dockerFile": "dev.Dockerfile",
+	
+	"updateContentCommand": ".devcontainer/updateContentCommand.sh",
+	
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"redhat.vscode-yaml",
+				"zaaack.markdown-editor",
+				"augustocdias.tasks-shell-input"
+			],
+			"settings": {
+			}
+		}
+	}
+}
