@@ -20,3 +20,4 @@ from .extract import Extract
 from .numpy import NumpyFile
 from .filter import Filter
 from .groupby import GroupBy
+from .sort import Sort

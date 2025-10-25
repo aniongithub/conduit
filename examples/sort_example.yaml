@@ -1,0 +1,14 @@
+---
+- id: conduit.Glob  
+  pattern: "**/*.py"
+  root_dir: "."
+  recursive: true
+
+- id: conduit.FileInfo
+  
+- id: conduit.Sort
+  key: "input.size"  # Sort by file size
+  reverse: true      # Largest files first
+  
+- id: conduit.Console
+  format: "{{input.name}} ........... {{input.size}} bytes"
