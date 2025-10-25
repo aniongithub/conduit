@@ -162,28 +162,28 @@ class Pipeline(PipelineElement):
                     raise AttributeError(f"Element of type {element.__class__} does not have an 'input' parameter. Signature is {inspect.signature(element.process)}")
                 arg_type = param_types["input"].__args__[0]
                 
-                def convert_and_process_items():
-                    """Lazily convert and process items one at a time"""
+                def convert_items_generator():
+                    """Create a generator that yields converted items on-demand"""
                     for item in self._flatten(input_stream):
                         try:
                             if arg_type == None.__class__ or arg_type == Any:
-                                # Direct processing for untyped elements
-                                yield from element.process(iter([item]))
+                                # For untyped elements, pass item directly
+                                yield item
                             else:
                                 # Convert item to expected type
                                 converted_item = self._convert_item_to_type(item, arg_type)
-                                # Process single item and yield results lazily
-                                yield from element.process(iter([converted_item]))
+                                yield converted_item
                         except Exception as item_ex:
                             element_id = self._get_id(element)
-                            logger().error(f"Error processing item in element {element_id}: {str(item_ex)}", exc_info=item_ex)
+                            logger().error(f"Error converting item in element {element_id}: {str(item_ex)}", exc_info=item_ex)
                             
                             if self.stop_on_error:
                                 raise
                             # Skip this item and continue with next
                             continue
                 
-                yield from convert_and_process_items()
+                # Let the element decide how to consume the generator (lazy vs eager)
+                yield from element.process(convert_items_generator())
                 
             except Exception as ex:
                 element_id = self._get_id(element)

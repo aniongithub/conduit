@@ -1,4 +1,4 @@
-from typing import Generator, Iterator, Any, Optional
+from typing import Generator, Iterator, Any, Optional, List
 from dataclasses import dataclass
 from ..pipelineElement import PipelineElement
 from collections import defaultdict
@@ -14,6 +14,12 @@ class GroupByInput:
     key: Optional[str] = None
     value: Optional[str] = None
 
+@dataclass 
+class GroupByOutput:
+    """Output from GroupBy element"""
+    key: str
+    values: List[Any]
+
 class GroupBy(PipelineElement):
     """
     GroupBy pipeline element for grouping items by a specified key.
@@ -22,20 +28,17 @@ class GroupBy(PipelineElement):
     then outputs grouped results as dictionaries with 'key' and 'values' fields.
     """
     
-    def __init__(self, key: str, value: Optional[str] = None, output_format: str = "dict"):
+    def __init__(self, key: str, value: Optional[str] = None):
         """
         Initialize GroupBy element.
         
         Args:
             key: Expression to group by (supports Python expressions like "input.department", "input['field']")
             value: Optional expression to extract as values (if None, uses entire input)
-            output_format: Format for output - "dict" (default) or "array"
-                - "dict": {"key": group_key, "values": [items]}
-                - "array": [group_key, [items]]
         """
         super().__init__()  # Automatically captures all constructor parameters
     
-    def process(self, input: Iterator[GroupByInput]) -> Generator[Any, None, None]:
+    def process(self, input: Iterator[GroupByInput]) -> Generator[GroupByOutput, None, None]:
         """Process all input items and group them by the specified key expression."""
         # Collect all items first (GroupBy requires materializing the iterator)
         items = list(input)
@@ -71,13 +74,6 @@ class GroupBy(PipelineElement):
             
             groups[group_key_str].append(group_value)
         
-        # Output grouped results - one group per yield
-        output_fmt = self._defaults.get('output_format', 'dict')
+        # Output grouped results - one group per yield as GroupByOutput dataclass
         for group_key, group_values in groups.items():
-            if output_fmt == "array":
-                yield [group_key, group_values]
-            else:  # default to dict format
-                yield {
-                    "key": group_key,
-                    "values": group_values
-                }
+            yield GroupByOutput(key=group_key, values=group_values)
