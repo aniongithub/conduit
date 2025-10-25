@@ -28,7 +28,7 @@ setup(
     name='conduit',
     version=get_git_version(),
     description='Conduit is a modular data-pipeline framework meant for creating, processing and transforming datasets for ML and AI.',
-    url='https://github.com/text2motion/conduit/',
+    url='https://github.com/aniongithub/conduit/',
     author='Ani Balasubramaniam',
     author_email='ani@anionline.me',
     license='MIT',

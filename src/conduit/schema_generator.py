@@ -3,6 +3,10 @@ Schema Generator for Conduit Pipeline Elements
 
 This module automatically generates a JSON schema for Conduit pipeline YAML/JSON configurations
 by introspecting the Python classes and their type hints, docstrings, and signatures.
+
+Environment Variables:
+- CONDUIT_SEARCH_PATHS: Comma-separated list of additional search paths for pipeline elements
+- CONDUIT_SCHEMA_PATH: Full path for output schema file (overrides default location)
 """
 
 import inspect
@@ -19,11 +23,57 @@ import pkgutil
 from .pipelineElement import PipelineElement
 from . import elements
 
-def get_all_pipeline_elements():
-    """Discover all PipelineElement classes in the conduit.elements module"""
+def get_pipeline_elements_from_path(search_path, prefix="conduit"):
+    """Discover PipelineElement classes from a specific module path"""
     elements_dict = {}
     
-    # Get the conduit.elements module
+    try:
+        # Add the search path to sys.path temporarily
+        search_path = Path(search_path).resolve()
+        if str(search_path) not in sys.path:
+            sys.path.insert(0, str(search_path))
+        
+        # Try to import the module at this path
+        for item in search_path.rglob("*.py"):
+            if item.name.startswith("__"):
+                continue
+                
+            # Convert file path to module name
+            rel_path = item.relative_to(search_path)
+            module_parts = list(rel_path.parts[:-1]) + [rel_path.stem]
+            module_name = ".".join(module_parts)
+            
+            if not module_name:
+                continue
+                
+            try:
+                module = importlib.import_module(module_name)
+                
+                # Find all classes that are subclasses of PipelineElement
+                for name, obj in inspect.getmembers(module, inspect.isclass):
+                    if (hasattr(obj, '__bases__') and 
+                        any('PipelineElement' in str(base) for base in obj.__mro__) and
+                        'PipelineElement' not in str(obj) and
+                        obj.__module__ == module_name):
+                        
+                        # Create element ID with specified prefix
+                        element_id = f"{prefix}.{name}"
+                        elements_dict[element_id] = obj
+                        
+            except (ImportError, AttributeError, ValueError) as e:
+                # Skip modules that can't be imported or don't have valid classes
+                continue
+                
+    except Exception as e:
+        print(f"Warning: Could not search path {search_path}: {e}")
+    
+    return elements_dict
+
+def get_all_pipeline_elements():
+    """Discover all PipelineElement classes from built-in and configured search paths"""
+    elements_dict = {}
+    
+    # Always include built-in conduit elements
     elements_module = elements
     
     # Walk through all modules in the elements package
@@ -45,6 +95,18 @@ def get_all_pipeline_elements():
         except ImportError as e:
             print(f"Warning: Could not import {modname}: {e}")
             continue
+    
+    # Check for additional search paths from environment variable
+    search_paths_env = os.getenv('CONDUIT_SEARCH_PATHS')
+    if search_paths_env:
+        print(f"Using additional search paths from CONDUIT_SEARCH_PATHS: {search_paths_env}")
+        search_paths = [path.strip() for path in search_paths_env.split(',') if path.strip()]
+        
+        for i, search_path in enumerate(search_paths):
+            # Use custom prefix for additional paths
+            prefix = f"custom{i+1}"
+            custom_elements = get_pipeline_elements_from_path(search_path, prefix)
+            elements_dict.update(custom_elements)
     
     return elements_dict
 
@@ -349,20 +411,36 @@ def generate_full_schema():
     
     return schema
 
-def find_schema_output_dir():
-    """Find the appropriate directory to write the schema file"""
-    # Always put schema in conduit package directory: {install_location}/conduit/schema
+def get_schema_output_path():
+    """Get the schema output path from environment variable or default location"""
+    # Check for custom schema path from environment variable
+    custom_path = os.getenv('CONDUIT_SCHEMA_PATH')
+    if custom_path:
+        print(f"Using custom schema path from CONDUIT_SCHEMA_PATH: {custom_path}")
+        return Path(custom_path)
+    
+    # Default: put schema in conduit package directory: {install_location}/conduit/schema
     import conduit
     conduit_path = Path(conduit.__file__).parent
     
     # Whether editable install or regular install, put schema inside the conduit package
     schema_dir = conduit_path / "schema"
     schema_dir.mkdir(exist_ok=True)
-    return schema_dir
+    return schema_dir / "pipeline-schema.json"
 
 def main():
     """Main function to generate and save the schema"""
     print("Generating Conduit pipeline schema...")
+    
+    # Show configuration
+    search_paths_env = os.getenv('CONDUIT_SEARCH_PATHS')
+    custom_path = os.getenv('CONDUIT_SCHEMA_PATH')
+    if search_paths_env or custom_path:
+        print("Configuration:")
+        if search_paths_env:
+            print(f"  Additional search paths: {search_paths_env}")
+        if custom_path:
+            print(f"  Custom output path: {custom_path}")
     
     # Discover all pipeline elements
     elements_dict = get_all_pipeline_elements()
@@ -373,11 +451,13 @@ def main():
     # Generate schema
     schema = generate_full_schema()
     
-    # Find appropriate output directory
-    schema_dir = find_schema_output_dir()
+    # Get output path
+    schema_file = get_schema_output_path()
+    
+    # Ensure directory exists
+    schema_file.parent.mkdir(parents=True, exist_ok=True)
     
     # Write schema to file
-    schema_file = schema_dir / "pipeline-schema.json"
     with open(schema_file, 'w', encoding='utf-8') as f:
         json.dump(schema, f, indent=2, sort_keys=True)
     

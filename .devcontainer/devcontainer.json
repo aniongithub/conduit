@@ -1,9 +1,18 @@
 {
 	"name": "devcontainer",
-	"dockerFile": "dev.Dockerfile",
+	"dockerFile": "../Dockerfile",
+	"build": {
+		"target": "base"
+	},
 	
 	"updateContentCommand": ".devcontainer/updateContentCommand.sh",
-	
+
+	"features": {
+		"ghcr.io/nils-geistmann/devcontainers-features/create-remote-user:0": {
+			"passwordLessSudo": true
+		}
+	},
+
 	"customizations": {
 		"vscode": {
 			"extensions": [
