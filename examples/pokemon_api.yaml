@@ -25,7 +25,7 @@
       - id: conduit.RestApi
         response_format: "json"
       - id: conduit.JsonQuery
-        query: ".sprites.other.official-artwork.front_default"
+        query: '.sprites.other["official-artwork"].front_default'
     filename:  # Pokemon name with .png extension
       - id: conduit.JsonQuery
         query: ".name"

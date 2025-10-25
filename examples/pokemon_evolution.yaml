@@ -1,0 +1,32 @@
+---
+# Pokemon Evolution Chain Pipeline
+# Usage: conduit-cli pokemon_evolution.yaml --args limit=5
+# Or: limit=5 conduit-cli pokemon_evolution.yaml
+# Defaults: limit=10
+
+# Step 1: Create RestApiInput for Pokemon evolution chain list API
+- id: conduit.Input
+  data:
+    - url: "https://pokeapi.co/api/v2/evolution-chain?limit=${limit:-10}"
+      method: "GET"
+
+# Step 2: Fetch evolution chain list from API with the specified limit
+- id: conduit.RestApi
+  response_format: "json"
+
+# Step 3: Extract each evolution chain URL from the results
+- id: conduit.JsonQuery
+  query: ".results[]"
+
+# Step 4: Fetch detailed evolution chain data for each URL
+- id: conduit.RestApi
+  response_format: "json"
+
+# Step 5: Extract evolution chain using recursive jq query
+# This collects all Pokemon in the chain and joins them with arrows
+- id: conduit.JsonQuery
+  query: '[.chain | recurse(.evolves_to[]?) | .species.name] | join(" → ")'
+
+# Step 6: Display complete evolution chain
+- id: conduit.Console
+  format: "Evolution chain: {{input}}"

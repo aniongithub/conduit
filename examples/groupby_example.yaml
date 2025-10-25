@@ -1,0 +1,28 @@
+---
+# GroupBy Files by Folder Example
+# Groups Python files by their containing directory
+# Usage: conduit-cli groupby_example.yaml
+
+# Step 1: Find all Python files in the project
+- id: conduit.Input
+  data:
+    - pattern: '**/*.py'
+      root_dir: '.'
+      recursive: true
+
+# Step 2: Get file information (including path details)
+- id: conduit.Glob
+- id: conduit.FileInfo
+
+# Step 3: Group files by their parent directory (extract directory from full path)
+- id: conduit.GroupBy
+  key: "'/'.join(input.name.split('/')[:-1]) if '/' in input.name else '.'"
+  value: "input.name.split('/')[-1]"
+
+# Step 4: Format the grouped results to show files per directory
+- id: conduit.Format
+  template: "📁 {{key}}/\n  {{values | join('\n  ')}}\n"
+
+# Step 5: Display the results
+- id: conduit.Console
+  format: "{{input}}"

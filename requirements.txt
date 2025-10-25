@@ -4,5 +4,6 @@ commentjson
 PyYAML
 pydantic
 Jinja2
+jq
 asciinet @ git+https://github.com/cosminbasca/asciinet.git#subdirectory=pyasciinet
 py-dagviz @ git+https://github.com/ctongfei/py-dagviz.git
