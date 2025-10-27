@@ -28,7 +28,7 @@ With this:
 
 ## Key Benefits
 
-- **🔧 Composable**: Mix and match 25+ built-in elements
+- **🔧 Composable**: Mix and match 25+ built-in elements, or write your own
 - **⚡ Streaming**: Memory-efficient, lazy processing of large datasets  
 - **🚀 Fast**: Get results as they're computed, not after everything finishes
 - **🌐 API-Ready**: Built-in REST server for pipeline execution
