@@ -13,6 +13,8 @@
 		}
 	},
 
+	"remoteUser": "vscode",
+
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -22,6 +24,7 @@
 				"augustocdias.tasks-shell-input"
 			],
 			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
 			}
 		}
 	}

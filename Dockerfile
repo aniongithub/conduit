@@ -4,11 +4,17 @@ RUN apt-get update &&\
     apt-get install -y \
         git \
         build-essential \
+        curl \
         netcat-traditional \
         default-jdk-headless
 
+# Install yq
+RUN wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq &&\
+    chmod +x /usr/local/bin/yq
+
 FROM base AS runtime
 
+# Install Conduit
 WORKDIR /conduit
 
 ARG USER_ID=1000

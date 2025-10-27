@@ -48,6 +48,19 @@
                 "--args", "${input:args}"
             ],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Start Conduit Server",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/conduit-cli",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "serve",
+                "--host", "0.0.0.0",
+                "--port", "8000"
+            ],
+            "console": "integratedTerminal"
         }
     ]
 }
