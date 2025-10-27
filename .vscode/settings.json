@@ -1,0 +1,33 @@
+{
+    "files.associations": {
+        "*.json": "jsonc"
+    },
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}"
+    },
+
+    "python.globalModuleInstallation": true,
+    
+    "yaml.schemas": {
+        "./src/conduit/schema/pipeline-schema.json": [
+            "examples/*.yaml",
+            "examples/*.yml",
+            "**/pipeline*.yaml",
+            "**/pipeline*.yml"
+        ]
+    },
+    "yaml.validate": true,
+    "yaml.completion": true,
+    "yaml.hover": true,
+    "yaml.format.enable": true,
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "examples/*.json",
+                "**/pipeline*.json"
+            ],
+            "url": "./src/conduit/schema/pipeline-schema.json"
+        }
+    ]
+
+}

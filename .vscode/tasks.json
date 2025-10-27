@@ -1,0 +1,55 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Generate Pipeline Schema",
+            "type": "shell",
+            "command": "conduit-generate-schema",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Generate JSON schema for Conduit pipeline YAML/JSON configurations"
+        },
+        {
+            "label": "(Re)Install Package (Development)",
+            "type": "shell", 
+            "command": "pip3",
+            "args": ["install", "-e", "."],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Install Conduit package in development mode"
+        },
+        {
+            "label": "Setup Development Environment",
+            "type": "shell",
+            "command": ".devcontainer/updateContentCommand.sh",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always", 
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Run the full development setup (re-install package + generate schema)",
+            "dependsOrder": "sequence"
+        }
+    ]
+}

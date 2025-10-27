@@ -1,0 +1,12 @@
+---
+# Start with empty input and generate file list using Glob
+- id: conduit.Input
+  data:
+    - pattern: '**/*.py'
+      root_dir: '.'
+      recursive: true
+
+- id: conduit.Glob
+- id: conduit.FileInfo
+- id: conduit.Console
+  format: "{{input.name}} ........... {{input.size}} bytes"

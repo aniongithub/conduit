@@ -1,0 +1,66 @@
+{
+    "version": "0.2.0",
+    // Adapted from https://stackoverflow.com/a/64990776/802203
+    "inputs": [
+        {
+            "id": "workflowFile",
+            "type": "command",
+            "command": "shellCommand.execute",
+            "args": {
+                "command": "find ./examples -type f -name '*.yaml' -o -name '*.json' -o -name '*.yml'"
+            }
+        },
+        {
+            "id": "args",
+            "type": "promptString",
+            "description": "Args to pass to the workflow",
+            "default": ""
+        }
+    ],
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Visualize conduit workflow...",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/conduit-cli",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "${input:workflowFile}",
+                "--visualize-only"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run conduit workflow...",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/conduit-cli",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "${input:workflowFile}",
+                "--args", "${input:args}"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Start Conduit Server",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/conduit-cli",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "serve",
+                "--host", "0.0.0.0",
+                "--port", "8000"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}

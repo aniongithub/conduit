@@ -1,0 +1,31 @@
+{
+	"name": "devcontainer",
+	"dockerFile": "../Dockerfile",
+	"build": {
+		"target": "base"
+	},
+	
+	"updateContentCommand": ".devcontainer/updateContentCommand.sh",
+
+	"features": {
+		"ghcr.io/nils-geistmann/devcontainers-features/create-remote-user:0": {
+			"passwordLessSudo": true
+		}
+	},
+
+	"remoteUser": "vscode",
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"redhat.vscode-yaml",
+				"zaaack.markdown-editor",
+				"augustocdias.tasks-shell-input"
+			],
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			}
+		}
+	}
+}

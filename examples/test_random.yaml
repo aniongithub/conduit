@@ -1,0 +1,26 @@
+---
+# Generate a random integer, then generate that many random floats
+- id: conduit.Input
+  data:
+    - max: 10  # Generate 1 random int between 0 and 10
+
+- id: conduit.Random
+  type: "int"
+
+# Show the generated random integer (but pass it through unchanged)
+- id: conduit.Console
+  format: "Generated random int: {{input}}, now generating that many floats..."
+
+# Use Fork to create the structure Iterate needs
+- id: conduit.Fork
+  paths:
+    input:  # Input for Random float (empty, ignored)
+      - id: conduit.Empty
+    count:  # The count from Random int (preserve the integer)
+      - id: conduit.Identity
+
+- id: conduit.Iterate
+- id: conduit.Random
+  type: "float"
+- id: conduit.Console
+  format: "Random float: {{input}}"
