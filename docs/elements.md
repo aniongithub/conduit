@@ -197,6 +197,121 @@ Generates empty data (useful in Fork paths).
 - id: conduit.Empty  # Outputs None
 ```
 
+## Network Elements
+
+### conduit.SftpList
+Lists files on an SFTP server and emits metadata for each file.
+
+**Parameters:**
+- `hostname` (str): SFTP server hostname
+- `username` (str): Username for authentication
+- `password` (str, optional): Password for authentication
+- `private_key_path` (str, optional): Path to SSH private key file
+- `port` (int): SFTP server port (default: 22)
+- `timeout` (int): Connection timeout in seconds (default: 30)
+- `allow_agent` (bool): Allow SSH agent for key authentication (default: false)
+- `look_for_keys` (bool): Look for keys in ~/.ssh (default: false)
+
+**Input:**
+- `remote_path` (str): Path to list on the SFTP server
+- `glob_pattern` (str, optional): Glob pattern to filter files (e.g., "*.csv")
+- `recursive` (bool): Recursively list subdirectories (default: false)
+- `list_dirs` (bool): Include directories in output (default: false)
+
+**Output:**
+Metadata dict for each file with keys:
+- `filename` (str): Name of the file
+- `remote_path` (str): Full remote path
+- `size` (int): File size in bytes (None for directories)
+- `is_directory` (bool): Whether the item is a directory
+- `mtime` (str): Last modification time (ISO8601 format)
+- `depth` (int): Directory depth (for recursive listings)
+- `attrs` (dict): Raw server attributes
+
+**Example:**
+```yaml
+- id: conduit.Input
+  data:
+    - remote_path: "/pub/data/"
+      glob_pattern: "*.csv"
+      recursive: true
+- id: conduit.SftpList
+  hostname: "sftp.example.com"
+  username: "myuser"
+  password: "mypass"
+  port: 22
+  timeout: 30
+```
+
+### conduit.SftpDownload
+Downloads files from an SFTP server given remote paths or metadata from SftpList.
+
+**Parameters:**
+- `hostname` (str): SFTP server hostname
+- `username` (str): Username for authentication
+- `password` (str, optional): Password for authentication
+- `private_key_path` (str, optional): Path to SSH private key file
+- `port` (int): SFTP server port (default: 22)
+- `timeout` (int): Connection timeout in seconds (default: 30)
+- `download_mode` (str): How to handle downloaded files:
+  - `"memory"`: Keep files in memory as BytesIO objects (default)
+  - `"temp"`: Download to temporary files
+  - `"local"`: Download to specified local directory
+- `local_dir` (str, optional): Local directory for downloads (required if download_mode="local")
+- `allow_agent` (bool): Allow SSH agent for key authentication (default: false)
+- `look_for_keys` (bool): Look for keys in ~/.ssh (default: false)
+
+**Input:**
+Accepts either:
+- A string containing the remote file path
+- A dict with at least `remote_path` key (as produced by SftpList)
+
+**Output:**
+Dict with keys:
+- `filename` (str): Name of the file
+- `remote_path` (str): Remote path
+- `file_obj` (BytesIO): File object (if mode="memory")
+- `local_path` (str): Local file path (if mode="temp" or mode="local")
+- `size` (int): File size in bytes
+- `mode` (str): Download mode used
+- Plus any metadata keys preserved from input (mtime, depth, attrs)
+
+**Example - List then Download:**
+```yaml
+# Step 1: List files on SFTP server
+- id: conduit.Input
+  data:
+    - remote_path: "/data/reports/"
+      glob_pattern: "*.csv"
+      recursive: true
+- id: conduit.SftpList
+  hostname: "sftp.example.com"
+  username: "myuser"
+  password: "mypass"
+
+# Step 2: Filter by size (only files > 1KB)
+- id: conduit.Filter
+  condition: "not item.is_directory and (item.size or 0) > 1024"
+
+# Step 3: Download selected files
+- id: conduit.SftpDownload
+  hostname: "sftp.example.com"
+  username: "myuser"
+  password: "mypass"
+  download_mode: "local"
+  local_dir: "./downloads"
+
+# Step 4: Process downloaded files
+- id: conduit.Console
+  format: "Downloaded: {{input.filename}} ({{input.size}} bytes)"
+```
+
+**Authentication Notes:**
+- Either `password` or `private_key_path` must be provided
+- Set `allow_agent=true` to use SSH agent authentication
+- Set `look_for_keys=true` to automatically search for keys in ~/.ssh
+- By default, agent and key lookups are disabled to avoid GUI passphrase prompts during unattended runs
+
 ## Output Elements
 
 ### conduit.Console
