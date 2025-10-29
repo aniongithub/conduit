@@ -1,0 +1,51 @@
+---
+# SFTP File Download Example (public demo server)
+# This example is configured to use Rebex's public SFTP demo server so it
+# can be run without local setup.
+# Quick run: `conduit-cli examples/sftp_example.yaml`
+# Demo credentials (public):
+#   hostname: test.rebex.net
+#   username: demo
+#   password: password
+ 
+# Example pipeline: list -> filter -> download -> process
+- id: conduit.Input
+  data:
+    # List text files from the public demo area
+    - remote_path: "/pub/example/"
+      glob_pattern: "*.txt"
+      recursive: false
+
+    # List all files in the public pub directory (top-level)
+    - remote_path: "/pub/"
+      glob_pattern: "*"
+      recursive: false
+
+# Step 1: perform server-side listing and emit metadata
+- id: conduit.SftpList
+  hostname: "test.rebex.net"
+  username: "demo"
+  password: "password"
+  private_key_path: ""
+  port: 22
+  timeout: 30
+
+# Step 2: filter listings (e.g., skip small files)
+- id: conduit.Filter
+  # Filter uses `item` as the variable in expressions; dicts are available
+  # via dot-notation (e.g., item.size). Keep files larger than 1KB.
+  condition: "not item.is_directory and (item.size or 0) < 1024"
+
+# Step 3: download selected files (receives metadata dicts from SftpList)
+- id: conduit.SftpDownload
+  hostname: "test.rebex.net"
+  username: "demo"
+  password: "password"
+  private_key_path: ""
+  port: 22
+  download_mode: "memory"  # keep content in memory for downstream processing
+  timeout: 30
+
+# Step 4: process downloaded files
+- id: conduit.Console
+  format: "Downloaded: {{input.filename}} ({{input.size}} bytes) mode={{input.mode}}"
