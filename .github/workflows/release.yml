@@ -74,12 +74,17 @@ jobs:
         # Test the published image
         docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/conduit-cli:${{ steps.version.outputs.version }} --help
         echo "✅ Released Docker image test passed"
+        
+    - name: Generate release artifacts
+      run: |
+        # Copy schema file with version (from the generated location)
+        cp src/conduit/schema/pipeline-schema.json conduit-pipeline-schema-${{ steps.version.outputs.version }}.json
+        echo "✅ Release artifacts created"
                 
     - name: Upload release artifacts
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          conduit-examples-${{ steps.version.outputs.version }}.tar.gz
           conduit-pipeline-schema-${{ steps.version.outputs.version }}.json
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
