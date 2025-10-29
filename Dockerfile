@@ -4,6 +4,7 @@ RUN apt-get update &&\
     apt-get install -y \
         git \
         build-essential \
+        wget \
         curl \
         netcat-traditional \
         default-jdk-headless
