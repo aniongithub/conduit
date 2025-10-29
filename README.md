@@ -96,6 +96,13 @@ docker run --rm -v $(pwd):/data -w /data aniondocker/conduit:latest run examples
 docker run --rm -v $(pwd):/data -w /data aniondocker/conduit:latest run examples/pokemon_filter.yaml
 ```
 
+**SFTP file operations** - List and download files from SFTP servers (uses public test server)
+
+```bash
+# Lists files from test SFTP server, filters by size, and downloads
+docker run --rm -v $(pwd):/data -w /data aniondocker/conduit:latest run examples/sftp_rebex_example.yaml
+```
+
 **Custom elements** - Demonstrates extending Conduit with user-defined processing elements
 
 ```bash
@@ -267,6 +274,7 @@ curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @-
 | **Transform** | `Filter`, `JsonQuery`, `Extract`, `Format` | Data processing and extraction   |
 | **Flow**      | `Fork`, `Iterate`, `Identity`, `Empty`     | Control flow and parallelization |
 | **Output**    | `Console`, `Download`                      | Results and file operations      |
+| **Network**   | `SftpList`, `SftpDownload`                 | SFTP file listing and transfer   |
 | **System**    | `Cli`, `FileInfo`, `Find`, `Path`          | System integration               |
 
 > **Need more?** Check the [full element reference](docs/elements.md) or [create custom elements](docs/custom-elements.md)
