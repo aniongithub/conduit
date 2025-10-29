@@ -32,8 +32,7 @@
             "program": "${workspaceFolder}/conduit-cli",
             "cwd": "${workspaceFolder}",
             "args": [
-                "${input:workflowFile}",
-                "--visualize-only"
+                "visualize", "${input:workflowFile}"
             ],
             "console": "integratedTerminal"
         },
@@ -44,7 +43,7 @@
             "program": "${workspaceFolder}/conduit-cli",
             "cwd": "${workspaceFolder}",
             "args": [
-                "${input:workflowFile}",
+                "run", "${input:workflowFile}",
                 "--args", "${input:args}"
             ],
             "console": "integratedTerminal"
