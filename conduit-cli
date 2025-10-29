@@ -118,8 +118,33 @@ def cmd_serve(args):
         logger().error("FastAPI and uvicorn are required for server mode. Install with: pip install fastapi uvicorn")
         return 1
 
+def cmd_generate_schema(args):
+    """Generate the JSON schema for pipeline configurations"""
+    from conduit.common import logger
+    
+    if hasattr(args, 'help_env') and args.help_env:
+        print("Environment Variables for Schema Generation:")
+        print("  CONDUIT_SEARCH_PATHS - Comma-separated list of additional search paths for pipeline elements")
+        print("  CONDUIT_SCHEMA_PATH  - Full path for output schema file (overrides default location)")
+        print()
+        print("Example usage:")
+        print("  export CONDUIT_SEARCH_PATHS=/path/to/custom/elements,/another/path")
+        print("  export CONDUIT_SCHEMA_PATH=/custom/output/schema.json")
+        print("  ./conduit-cli generate-schema")
+        return 0
+    
+    try:
+        from conduit.schema_generator import main as generate_schema
+        logger().info("Generating Conduit pipeline schema...")
+        generate_schema()
+        logger().info("Schema generation completed successfully")
+        return 0
+    except Exception as e:
+        logger().error(f"Schema generation failed: {str(e)}")
+        return 1
+
 def main():
-    parser = argparse.ArgumentParser(description="Conduit - A streaming data pipeline framework")
+    parser = argparse.ArgumentParser(description="Conduit - Streaming, declarative pipelined data processing library for Python")
     
     # Logging configuration options
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO", 
@@ -159,6 +184,10 @@ def main():
     serve_parser.add_argument("--port", type=int, default=8000, help="Port to bind the server to (default: 8000)")
     serve_parser.add_argument("-w", "--working-directory", help="Set the working directory for pipeline execution", default=os.getcwd())
     
+    # Generate schema command
+    schema_parser = subparsers.add_parser('generate-schema', help='Generate JSON schema for pipeline configurations')
+    schema_parser.add_argument("--help-env", action="store_true", help="Show environment variable configuration options")
+    
     args = parser.parse_args()
     
     # Configure logger early based on CLI arguments
@@ -175,6 +204,8 @@ def main():
         return cmd_visualize(args)
     elif args.command == 'serve':
         return cmd_serve(args)
+    elif args.command == 'generate-schema':
+        return cmd_generate_schema(args)
 
 if __name__ == "__main__":
     cwd = os.getcwd()

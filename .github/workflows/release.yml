@@ -66,7 +66,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PAT }}
         repository: ${{ secrets.DOCKERHUB_USERNAME }}/conduit-cli
-        short-description: "Streaming data processing CLI tool with 25+ pipeline elements"
+        short-description: "Streaming, declarative pipelined data processing library for Python"
         readme-filepath: ./README.md
 
     - name: Test released Docker image
@@ -74,15 +74,7 @@ jobs:
         # Test the published image
         docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/conduit-cli:${{ steps.version.outputs.version }} --help
         echo "✅ Released Docker image test passed"
-        
-    - name: Generate release artifacts
-      run: |
-        # Create a tarball of examples
-        tar -czf conduit-examples-${{ steps.version.outputs.version }}.tar.gz examples/
-        # Copy schema file with version
-        cp schema/pipeline-schema.json conduit-pipeline-schema-${{ steps.version.outputs.version }}.json
-        echo "✅ Release artifacts created"
-        
+                
     - name: Upload release artifacts
       uses: softprops/action-gh-release@v2
       with:

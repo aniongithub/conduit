@@ -17,10 +17,13 @@ jobs:
       with:
         python-version: '3.11'
         
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
     - name: Build Docker image
       run: |
-        docker build -t conduit:latest .
-        echo "✅ Docker build completed successfully"
+        docker buildx build --platform linux/amd64,linux/arm64 -t conduit:latest --load .
+        echo "✅ Docker multi-platform build completed successfully"
         
     - name: Test Docker image - Basic functionality
       run: |

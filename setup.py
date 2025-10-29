@@ -27,7 +27,7 @@ class PostInstallCommand(install):
 setup(
     name='conduit',
     version=get_git_version(),
-    description='Conduit is a modular data-pipeline framework meant for creating, processing and transforming datasets for ML and AI.',
+    description='Streaming, declarative pipelined data processing library for Python',
     url='https://github.com/aniongithub/conduit/',
     author='Ani Balasubramaniam',
     author_email='ani@anionline.me',
