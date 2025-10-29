@@ -53,8 +53,8 @@ jobs:
         file: ./Dockerfile
         push: true
         tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/conduit-cli:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/conduit-cli:${{ steps.version.outputs.version }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/conduit:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/conduit:${{ steps.version.outputs.version }}
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -65,14 +65,14 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PAT }}
-        repository: ${{ secrets.DOCKERHUB_USERNAME }}/conduit-cli
+        repository: ${{ secrets.DOCKERHUB_USERNAME }}/conduit
         short-description: "Streaming, declarative pipelined data processing library for Python"
         readme-filepath: ./README.md
 
     - name: Test released Docker image
       run: |
         # Test the published image
-        docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/conduit-cli:${{ steps.version.outputs.version }} --help
+        docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/conduit:${{ steps.version.outputs.version }} --help
         echo "✅ Released Docker image test passed"
         
     - name: Generate release artifacts

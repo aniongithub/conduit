@@ -1,0 +1,10 @@
+- id: conduit.Input
+  data:
+    - message: "Testing custom elements!"
+    - message: "This is so cool!"
+
+- id: elements.ExampleCustom
+  prefix: "[DEMO]"
+
+- id: conduit.Console
+  format: "Custom output: {{input.custom_message}}"
