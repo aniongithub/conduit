@@ -23,8 +23,8 @@ jobs:
       
     - name: Build Docker image
       run: |
-        docker buildx build --platform linux/amd64,linux/arm64 -t conduit:latest --load .
-        echo "✅ Multi-platform Docker build completed successfully"
+        docker buildx build --platform linux/amd64 -t conduit:latest --load .
+        echo "✅ Docker build completed successfully"
         
     - name: Test Docker image - Basic functionality
       run: |
