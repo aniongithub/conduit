@@ -18,10 +18,32 @@ class kwargs_append_action(argparse.Action):
             raise argparse.ArgumentError(self, f"Could not parse argument \"{values}\" as k1=v1 k2=v2 ... format")
         setattr(args, self.dest, d)
 
+def configure_logger(args):
+    """Configure logger based on CLI arguments"""
+    from conduit.common import logger
+    
+    log_config = {
+        'level': args.log_level,
+        'format_type': getattr(args, 'log_format', 'color'),
+        'output': getattr(args, 'log_output', 'console'),
+        'use_colors': None if not getattr(args, 'log_no_colors', False) else False,
+        'use_indentation': not getattr(args, 'log_no_indentation', False),
+        'reset': True  # Always reset when configuring from CLI
+    }
+    
+    # Add filename if file output is requested
+    if hasattr(args, 'log_file') and args.log_file:
+        log_config['filename'] = args.log_file
+    elif log_config['output'] in ('file', 'both'):
+        log_config['filename'] = 'conduit.log'  # Default filename
+    
+    # Configure the logger
+    logger(**log_config)
+
 def cmd_run(args):
     """Run a pipeline configuration"""
-    # Set log level
-    set_log_level(args.log_level)
+    from conduit.pipeline import Pipeline
+    from conduit.common import logger
     
     # Set our arguments in the environment for expansion
     for arg, value in args.args.items():
@@ -29,46 +51,65 @@ def cmd_run(args):
 
     pipeline_path = Path(args.pipeline).absolute()
     os.chdir(args.working_directory)
-    output = Pipeline.from_config(pipeline_path, expand_env=True, stop_on_error=args.stop_on_error)
-
-    result = output.run(None)
-    return result
+    
+    try:
+        output = Pipeline.from_config(pipeline_path, expand_env=True, stop_on_error=args.stop_on_error)
+        result = output.run(None)
+        
+        # Check element metrics to determine exit code
+        if hasattr(output, 'stats') and output.stats and hasattr(output.stats, 'element_metrics'):
+            failed_elements = [m for m in output.stats.element_metrics if m.status == "failed"]
+            if failed_elements:
+                logger().error(f"Pipeline completed with {len(failed_elements)} failed element(s)")
+                return 1  # Error exit code
+        
+        logger().info("Pipeline completed successfully")
+        return 0  # Success exit code
+        
+    except Exception as e:
+        logger().error(f"Pipeline execution failed: {str(e)}")
+        return 1  # Error exit code
 
 def cmd_visualize(args):
     """Visualize a pipeline structure without running it"""
-    # Set log level
-    set_log_level(args.log_level)
+    from conduit.pipeline import Pipeline
+    from conduit.common import logger
     
     # Set our arguments in the environment for expansion
     for arg, value in args.args.items():
         os.environ[arg] = value
 
-    pipeline_path = Path(args.pipeline).absolute()
-    os.chdir(args.working_directory)
-    output = Pipeline.from_config(pipeline_path, expand_env=True, stop_on_error=args.stop_on_error)
-
-    print("Pipeline structure:")
-    graph = output.to_graph()
-    log = logger()
-
     try:
-        from asciinet import graph_to_ascii
-        log.info("Using asciinet for pipeline visualization")
-        use_dagviz = False
-    except ImportError:
-        log.warning("asciinet cannot be imported, using py-dagviz for visualization instead. Try installing Java in your environment if you want to use asciinet.")
-        use_dagviz = True
-        from dagviz import visualize_dag
+        pipeline_path = Path(args.pipeline).absolute()
+        os.chdir(args.working_directory)
+        output = Pipeline.from_config(pipeline_path, expand_env=True, stop_on_error=args.stop_on_error)
 
-    if use_dagviz:
-        print(visualize_dag(graph, round_angle=True))
-    else:
-        print(graph_to_ascii(graph))
+        print("Pipeline structure:")
+        graph = output.to_graph()
+
+        try:
+            from asciinet import graph_to_ascii
+            logger().info("Using asciinet for pipeline visualization")
+            use_dagviz = False
+        except ImportError:
+            logger().warning("asciinet cannot be imported, using py-dagviz for visualization instead. Try installing Java in your environment if you want to use asciinet.")
+            use_dagviz = True
+            from dagviz import visualize_dag
+
+        if use_dagviz:
+            print(visualize_dag(graph, round_angle=True))
+        else:
+            print(graph_to_ascii(graph))
+        
+        return 0  # Success exit code
+        
+    except Exception as e:
+        logger().error(f"Pipeline visualization failed: {str(e)}")
+        return 1  # Error exit code
 
 def cmd_serve(args):
     """Start the Conduit server"""
-    # Set log level
-    set_log_level(args.log_level)
+    from conduit.common import logger
     
     try:
         from conduit.server import start_server
@@ -79,8 +120,20 @@ def cmd_serve(args):
 
 def main():
     parser = argparse.ArgumentParser(description="Conduit - A streaming data pipeline framework")
+    
+    # Logging configuration options
     parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO", 
         help="Set the logging level (default: INFO)")
+    parser.add_argument("--log-format", choices=["color", "simple", "structured"], default="color",
+        help="Set the log format type (default: color)")
+    parser.add_argument("--log-output", choices=["console", "file", "both"], default="console",
+        help="Set the log output destination (default: console)")
+    parser.add_argument("--log-file", type=str, default=None,
+        help="Log file path (required when log-output includes 'file')")
+    parser.add_argument("--log-no-colors", action="store_true", default=False,
+        help="Disable colored output (auto-detected by default)")
+    parser.add_argument("--log-no-indentation", action="store_true", default=False,
+        help="Disable log indentation for nested operations")
     
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
@@ -107,6 +160,9 @@ def main():
     serve_parser.add_argument("-w", "--working-directory", help="Set the working directory for pipeline execution", default=os.getcwd())
     
     args = parser.parse_args()
+    
+    # Configure logger early based on CLI arguments
+    configure_logger(args)
     
     if args.command is None:
         parser.print_help()

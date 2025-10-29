@@ -1,0 +1,11 @@
+---
+# Simple Hello World pipeline
+# Demonstrates basic input and console output
+
+- id: conduit.Input
+  data:
+    - name: "World"
+    - name: "Conduit"
+
+- id: conduit.Console
+  format: "Hello, {{input.name}}!"

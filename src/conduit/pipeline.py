@@ -190,49 +190,26 @@ class Pipeline(PipelineElement):
         
         self.stats.end_time = time.time()
         logger().info("Pipeline completed")
-        logger().info("═══ Pipeline Summary ═══")
-        logger().info(f"Total elements: {len(self.stats.element_metrics)}")
-        logger().info(f"Total execution time: {self.stats.duration:.1f}s")
-        logger().info(f"Total items processed: {self.stats.total_items_processed}")
+        logger().info(f"Pipeline Summary: Total elements: {len(self.stats.element_metrics)}")
+        logger().info(f"Pipeline Summary: Total execution time: {self.stats.duration:.1f}s")
+        logger().info(f"Pipeline Summary: Total items processed: {self.stats.total_items_processed}")
         
         if self.stats.element_metrics:
             # Calculate total processing time (sum of all element times - these overlap in streaming)
             total_processing_time = sum(m.duration for m in self.stats.element_metrics)
-            logger().info(f"Total processing time: {total_processing_time:.1f}s (overlapping)")
+            logger().info(f"Pipeline Summary: Total processing time: {total_processing_time:.1f}s (overlapping)")
             
             if self.stats.duration > 0:
                 throughput = self.stats.total_items_processed / self.stats.duration
                 pipeline_efficiency = (self.stats.duration / total_processing_time) * 100 if total_processing_time > 0 else 0
-                logger().info(f"Overall throughput: {throughput:.0f} items/second")
-                logger().info(f"Pipeline efficiency: {pipeline_efficiency:.1f}% (streaming overlap)")
+                logger().info(f"Pipeline Summary: Overall throughput: {throughput:.0f} items/second")
+                logger().info(f"Pipeline Summary: Pipeline efficiency: {pipeline_efficiency:.1f}% (streaming overlap)")
         
         # Log per-element stats as ASCII table
-        logger().info("Element breakdown:")
-        
-        # Prepare table data
-        table_data = []
+        # Log individual element performance
         for i, metrics in enumerate(reversed(self.stats.element_metrics), 1):
             element_name = metrics.element_id.split('.')[-1]  # Get just the class name
-            duration_str = f"{metrics.duration:.1f}s"
-            table_data.append((i, element_name, metrics.items_processed, duration_str))
-        
-        # Calculate column widths
-        if table_data:
-            max_name_width = max(len(row[1]) for row in table_data)
-            max_items_width = max(len(str(row[2])) for row in table_data)
-            max_time_width = max(len(row[3]) for row in table_data)
-            
-            # Create table header
-            header = f"  {'#':2} {'Element':<{max_name_width}} {'Items':>{max_items_width}} {'Time':>{max_time_width}}"
-            separator = f"  {'-'*2} {'-'*max_name_width} {'-'*max_items_width} {'-'*max_time_width}"
-            
-            logger().info(header)
-            logger().info(separator)
-            
-            # Create table rows
-            for num, name, items, duration_str in table_data:
-                row = f"  {num:2} {name:<{max_name_width}} {items:>{max_items_width}} {duration_str:>{max_time_width}}"
-                logger().info(row)
+            logger().info(f"Pipeline Summary: Element {i}: {element_name} processed {metrics.items_processed} items in {metrics.duration:.1f}s")
 
     def _convert_item_to_type(self, item, target_type):
         """Convert a single item to the target type"""
