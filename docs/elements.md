@@ -312,6 +312,121 @@ Dict with keys:
 - Set `look_for_keys=true` to automatically search for keys in ~/.ssh
 - By default, agent and key lookups are disabled to avoid GUI passphrase prompts during unattended runs
 
+## Data Processing Elements
+
+### conduit.CsvReader
+Reads CSV files and yields each row as a dictionary.
+
+**Parameters:**
+- `delimiter` (str): Field delimiter character (default: ",")
+- `quotechar` (str): Quote character for fields (default: '"')
+- `encoding` (str): Text encoding (default: "utf-8")
+- `skip_empty_rows` (bool): Skip rows with no data (default: true)
+- `fieldnames` (list[str], optional): Custom field names for headerless CSV files
+
+**Input:**
+Accepts any of:
+- A string containing a file path
+- A file-like object (e.g., BytesIO from DownloadFile)
+- A dict with one of these keys:
+  - `file_obj`: File-like object
+  - `local_path`: Path to local file
+  - `remote_path`: Path to remote file
+  - `path`: Generic path
+
+**Output:**
+Dict for each CSV row with field names as keys
+
+**Example:**
+```yaml
+# Read CSV from downloaded file
+- id: conduit.Input
+  data:
+    - url: "https://example.com/data.csv"
+
+- id: conduit.DownloadFile
+  output_dir: "/tmp"
+  
+- id: conduit.CsvReader
+  delimiter: ","
+  encoding: "utf-8"
+  skip_empty_rows: true
+  
+- id: conduit.Console
+  format: "{{input.name}}: {{input.email}}"
+```
+
+**Complete Example with Grouping:**
+```yaml
+# Download, parse, and group CSV data
+- id: conduit.Input
+  data:
+    - url: "https://example.com/customers.csv"
+      filename: "customers.csv"
+
+- id: conduit.DownloadFile
+  output_dir: "/tmp"
+
+- id: conduit.CsvReader
+
+- id: conduit.GroupBy
+  key: "input['Country']"
+
+- id: conduit.Console
+  format: |
+    === {{input.key}} ({{input.values|length}} customers) ===
+    {% for customer in input.values %}
+    - {{customer.Name}} ({{customer.Email}})
+    {% endfor %}
+```
+
+**Notes:**
+- Uses Python's built-in `csv.DictReader` for robust CSV parsing
+- Automatically handles different input types (paths, file objects, dicts)
+- Preserves metadata from previous elements when input is a dict
+- Supports various text encodings for international data
+- Works seamlessly with DownloadFile, SftpDownload, and other file sources
+
+### conduit.GroupBy
+Groups items by a key expression and outputs grouped results.
+
+**Parameters:**
+- `key` (str): Python expression to extract grouping key (use `input` variable)
+- `value` (str, optional): Python expression to extract values (default: entire input)
+
+**Input:**
+Any data items to be grouped
+
+**Output:**
+Dict with keys:
+- `key` (str): The grouping key
+- `values` (list): List of items in this group
+
+**Example:**
+```yaml
+# Group by category
+- id: conduit.GroupBy
+  key: "input['category']"
+  
+# Access nested fields
+- id: conduit.GroupBy
+  key: "input.user.country"
+```
+
+### conduit.Sort
+Sorts items by a key expression.
+
+**Parameters:**
+- `key` (str): Python expression to extract sort key (use `input` variable)
+- `reverse` (bool): Sort in descending order (default: false)
+
+**Example:**
+```yaml
+- id: conduit.Sort
+  key: "input['score']"
+  reverse: true  # Highest scores first
+```
+
 ## Output Elements
 
 ### conduit.Console
