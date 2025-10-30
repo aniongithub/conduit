@@ -1,0 +1,33 @@
+---
+# CSV File Processing Example
+# Downloads a CSV file from Google Drive and displays each record
+# Quick run: `conduit-cli examples/csv_example.yaml`
+
+# Step 1: Download the CSV file to a local temp location
+- id: conduit.Input
+  data:
+    - url: "https://drive.google.com/uc?id=1zO8ekHWx9U7mrbx_0Hoxxu6od7uxJqWw&export=download"
+      filename: "sample_data.csv"
+
+- id: conduit.DownloadFile
+  output_dir: "/tmp"
+  overwrite: true
+  create_dirs: true
+
+# Step 2: Read CSV and yield each row as a dict
+- id: conduit.CsvReader
+  delimiter: ","
+  encoding: "utf-8"
+  skip_empty_rows: true
+
+# Step 3: Group customers by country
+- id: conduit.GroupBy
+  key: "input['Country']"
+
+# Step 4: Display each country group using advanced jinja2 templating
+- id: conduit.Console
+  format: |
+    === {{input.key}} ({{input.values|length}} customers) ===
+    {% for customer in input.values %}
+    - {{customer['First Name']}} {{customer['Last Name']}} ({{customer.Email}})
+    {% endfor %}

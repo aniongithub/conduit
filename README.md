@@ -103,6 +103,13 @@ docker run --rm -v $(pwd):/data -w /data aniondocker/conduit:latest run examples
 docker run --rm -v $(pwd):/data -w /data aniondocker/conduit:latest run examples/sftp_rebex_example.yaml
 ```
 
+**CSV processing** - Download and process CSV files with grouping and aggregation
+
+```bash
+# Downloads CSV from Google Drive, groups by country, and displays results
+docker run --rm aniondocker/conduit:latest run examples/csv_example.yaml
+```
+
 **Custom elements** - Demonstrates extending Conduit with user-defined processing elements
 
 ```bash
@@ -272,8 +279,9 @@ curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d @-
 | --------------- | -------------------------------------------- | ---------------------------------- |
 | **Input**     | `Input`, `RestApi`, `Random`, `Glob`       | Data sources and generation      |
 | **Transform** | `Filter`, `JsonQuery`, `Extract`, `Format` | Data processing and extraction   |
+| **Data**      | `CsvReader`, `GroupBy`, `Sort`             | Data parsing and organization    |
 | **Flow**      | `Fork`, `Iterate`, `Identity`, `Empty`     | Control flow and parallelization |
-| **Output**    | `Console`, `Download`                      | Results and file operations      |
+| **Output**    | `Console`, `DownloadFile`                  | Results and file operations      |
 | **Network**   | `SftpList`, `SftpDownload`                 | SFTP file listing and transfer   |
 | **System**    | `Cli`, `FileInfo`, `Find`, `Path`          | System integration               |
 
